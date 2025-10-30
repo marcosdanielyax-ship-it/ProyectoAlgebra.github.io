@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Calculadora: Volumen y Área de Paralelepípedo</title>
+  <style>
+    /* ====== CSS simple y moderno ====== */
+    :root{
+      --bg:#f6f8fa;
+      --card:#ffffff;
+      --muted:#666;
+      --accent:#2563eb;
+      --danger:#dc2626;
+      --glass: rgba(16,24,40,0.03);
+      font-family: Inter, Roboto, "Segoe UI", Arial, sans-serif;
+    }
+    body{
+      background: linear-gradient(180deg,#eef2ff 0%, var(--bg) 100%);
+      margin:0;
+      padding:32px;
+      color:#0f172a;
+      -webkit-font-smoothing:antialiased;
+    }
+    .container{
+      max-width:920px;
+      margin:0 auto;
+    }
+    header{
+      margin-bottom:18px;
+      display:flex;
+      gap:12px;
+      align-items:center;
+    }
+    h1{ font-size:20px; margin:0; }
+    p.lead{ margin:0; color:var(--muted); font-size:14px; }
+
+    .card{
+      background:var(--card);
+      border-radius:12px;
+      padding:18px;
+      box-shadow: 0 6px 18px rgba(15,23,42,0.06);
+      margin-bottom:18px;
+    }
+
+    .grid{
+      display:grid;
+      gap:12px;
+      grid-template-columns: repeat(3,1fr);
+    }
+    label{ display:block; font-size:13px; color:#0b1220; margin-bottom:6px; }
+    input[type="number"]{
+      width:100%;
+      padding:8px 10px;
+      border-radius:8px;
+      border:1px solid #e6e9ef;
+      font-size:14px;
+      background:transparent;
+    }
+    .row{
+      display:flex;
+      gap:12px;
+      align-items:center;
+    }
+
+    .actions{
+      display:flex;
+      gap:12px;
+      margin-top:12px;
+    }
+    button{
+      padding:10px 14px;
+      border-radius:10px;
+      border:0;
+      cursor:pointer;
+      font-weight:600;
+    }
+    .btn-primary{ background:var(--accent); color:white; }
+    .btn-clear{ background:transparent; border:1px solid #e6e9ef; color:var(--muted); }
+
+    pre.output{
+      background: #0b1220;
+      color:#e6eef8;
+      padding:12px;
+      border-radius:8px;
+      overflow:auto;
+      font-size:13px;
+    }
+
+    .result-grid{
+      display:grid;
+      gap:8px;
+      grid-template-columns: repeat(2, 1fr);
+      margin-top:12px;
+    }
+    .metric{
+      background: var(--glass);
+      padding:10px;
+      border-radius:8px;
+    }
+    .error{ color:var(--danger); margin-top:8px; font-weight:600; }
+    @media(max-width:780px){
+      .grid{ grid-template-columns: 1fr; }
+      .result-grid{ grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div>
+        <h1>Calculadora: Volumen y Área Superficial de un Paralelepípedo</h1>
+        <p class="lead">Introduce 4 puntos (A es el origen), la página calcula vectores, área de caras y volumen.</p>
+      </div>
+    </header>
+
+    <section class="card">
+      <h2 style="font-size:15px;margin-bottom:10px">Coordenadas de los 4 puntos</h2>
+
+      <form id="formPoints" autocomplete="off" onsubmit="return false;">
+        <div class="grid">
+          <!-- Agrupamos A,B,C,D: cada punto con x,y,z -->
+          <div>
+            <label>A (Origen)</label>
+            <div class="row">
+              <input type="number" step="any" id="Ax" placeholder="Ax" />
+              <input type="number" step="any" id="Ay" placeholder="Ay" />
+              <input type="number" step="any" id="Az" placeholder="Az" />
+            </div>
+          </div>
+
+          <div>
+            <label>B (Vértice 1)</label>
+            <div class="row">
+              <input type="number" step="any" id="Bx" placeholder="Bx" />
+              <input type="number" step="any" id="By" placeholder="By" />
+              <input type="number" step="any" id="Bz" placeholder="Bz" />
+            </div>
+          </div>
+
+          <div>
+            <label>C (Vértice 2)</label>
+            <div class="row">
+              <input type="number" step="any" id="Cx" placeholder="Cx" />
+              <input type="number" step="any" id="Cy" placeholder="Cy" />
+              <input type="number" step="any" id="Cz" placeholder="Cz" />
+            </div>
+          </div>
+
+          <div>
+            <label>D (Vértice 3)</label>
+            <div class="row">
+              <input type="number" step="any" id="Dx" placeholder="Dx" />
+              <input type="number" step="any" id="Dy" placeholder="Dy" />
+              <input type="number" step="any" id="Dz" placeholder="Dz" />
+            </div>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button class="btn-primary" id="btnCalc">Calcular</button>
+          <button class="btn-clear" id="btnClear" type="button">Limpiar</button>
+          <div style="margin-left:auto; color:var(--muted); align-self:center; font-size:13px">
+            Formato: decimales con punto. Inputs vacíos se interpretan como 0.
+          </div>
+        </div>
+
+        <div id="error" class="error" style="display:none"></div>
+
+      </form>
+    </section>
+
+    <section class="card">
+      <h2 style="font-size:15px;margin-bottom:8px">Resultados</h2>
+
+      <div class="result-grid">
+        <div class="metric" id="vectorsOut">
+          <strong>Vectores (a = B-A, b = C-A, c = D-A)</strong>
+          <div id="vecA">a = [...]</div>
+          <div id="vecB">b = [...]</div>
+          <div id="vecC">c = [...]</div>
+        </div>
+
+        <div class="metric" id="areasOut">
+          <strong>Áreas (paralelogramos) y área total</strong>
+          <div id="areaAB">|a × b| = ...</div>
+          <div id="areaAC">|a × c| = ...</div>
+          <div id="areaBC">|b × c| = ...</div>
+          <div style="margin-top:8px"><strong>Área superficial total (6 caras):</strong> <span id="areaTotal">...</span></div>
+        </div>
+
+        <div class="metric" style="grid-column: span 2;">
+          <strong>Volumen (|a · (b × c)|)</strong>
+          <div id="volOut">Volumen = ...</div>
+        </div>
+      </div>
+
+      <h3 style="margin-top:12px;font-size:14px">Salida detallada (consola)</h3>
+      <pre class="output" id="consoleOut">No hay salida aún.</pre>
+    </section>
+
+    <footer style="text-align:center; color:var(--muted); font-size:13px; margin-top:10px;">
+      Implementación en JavaScript — basado en fórmulas de producto cruz y triple producto (área y volumen). 
+    </footer>
+  </div>
+
+  <script>
+    // ======= Funciones matemáticas (equivalentes a tu Python) =======
+    function cross(u, v) {
+      return [
+        u[1]*v[2] - u[2]*v[1],
+        u[2]*v[0] - u[0]*v[2],
+        u[0]*v[1] - u[1]*v[0]
+      ];
+    }
+
+    function dot(u, v) {
+      return u[0]*v[0] + u[1]*v[1] + u[2]*v[2];
+    }
+
+    function norm(u) {
+      return Math.sqrt(u[0]*u[0] + u[1]*u[1] + u[2]*u[2]);
+    }
+
+    function parseInputFloat(id) {
+      const el = document.getElementById(id);
+      const val = el.value.trim();
+      if (val === "") return 0; // permitimos vacío => 0 (o cambia si quieres exigir)
+      const n = Number(val);
+      if (Number.isNaN(n)) throw new Error("Valor inválido en " + id + " → '" + val + "'");
+      return n;
+    }
+
+    function readPoints() {
+      const A = [ parseInputFloat("Ax"), parseInputFloat("Ay"), parseInputFloat("Az") ];
+      const B = [ parseInputFloat("Bx"), parseInputFloat("By"), parseInputFloat("Bz") ];
+      const C = [ parseInputFloat("Cx"), parseInputFloat("Cy"), parseInputFloat("Cz") ];
+      const D = [ parseInputFloat("Dx"), parseInputFloat("Dy"), parseInputFloat("Dz") ];
+      return {A,B,C,D};
+    }
+
+    function subtract(u,v){
+      return [ u[0]-v[0], u[1]-v[1], u[2]-v[2] ];
+    }
+
+    // ======= Lógica de la UI =======
+    const btnCalc = document.getElementById("btnCalc");
+    const btnClear = document.getElementById("btnClear");
+    const errorBox = document.getElementById("error");
+    const consoleOut = document.getElementById("consoleOut");
+
+    btnCalc.addEventListener("click", () => {
+      errorBox.style.display = "none";
+      try {
+        const {A,B,C,D} = readPoints();
+        // Vectores a, b, c
+        const a = subtract(B,A);
+        const b = subtract(C,A);
+        const c = subtract(D,A);
+
+        // Productos cruz
+        const axb = cross(a,b);
+        const axc = cross(a,c);
+        const bxc = cross(b,c);
+
+        // Normas (áreas de paralelogramos)
+        const area1 = norm(axb);
+        const area2 = norm(axc);
+        const area3 = norm(bxc);
+        const areaTotal = 2 * (area1 + area2 + area3);
+
+        // Volumen: | a · (b × c) |
+        const bxc_for_vol = cross(b,c); // ya lo tenemos en bxc
+        const triple = dot(a, bxc_for_vol);
+        const volumen = Math.abs(triple);
+
+        // Mostrar en UI
+        document.getElementById("vecA").textContent = "a = B - A = [" + a.map(x => x.toFixed(4)).join(", ") + "]";
+        document.getElementById("vecB").textContent = "b = C - A = [" + b.map(x => x.toFixed(4)).join(", ") + "]";
+        document.getElementById("vecC").textContent = "c = D - A = [" + c.map(x => x.toFixed(4)).join(", ") + "]";
+
+        document.getElementById("areaAB").textContent = "|a × b| = " + area1.toFixed(6);
+        document.getElementById("areaAC").textContent = "|a × c| = " + area2.toFixed(6);
+        document.getElementById("areaBC").textContent = "|b × c| = " + area3.toFixed(6);
+        document.getElementById("areaTotal").textContent = areaTotal.toFixed(6);
+
+        document.getElementById("volOut").textContent = "Volumen = |a · (b × c)| = " + volumen.toFixed(6);
+
+        // Consola detallada
+        consoleOut.textContent = [
+          "Puntos:",
+          "A = [" + A.join(", ") + "]",
+          "B = [" + B.join(", ") + "]",
+          "C = [" + C.join(", ") + "]",
+          "D = [" + D.join(", ") + "]",
+          "",
+          "Vectores:",
+          "a = " + JSON.stringify(a),
+          "b = " + JSON.stringify(b),
+          "c = " + JSON.stringify(c),
+          "",
+          "Producto cruz (a × b) = " + JSON.stringify(axb),
+          "Producto cruz (a × c) = " + JSON.stringify(axc),
+          "Producto cruz (b × c) = " + JSON.stringify(bxc),
+          "",
+          "Áreas (paralelogramos):",
+          "|a × b| = " + area1,
+          "|a × c| = " + area2,
+          "|b × c| = " + area3,
+          "Área superficial total = 2*(...) = " + areaTotal,
+          "",
+          "Producto triple (a · (b × c)) = " + triple,
+          "Volumen absoluto = " + volumen
+        ].join("\n");
+
+      } catch (err) {
+        errorBox.style.display = "block";
+        errorBox.textContent = "Error: " + err.message;
+        consoleOut.textContent = "No se pudo calcular: " + err.message;
+      }
+    });
+
+    btnClear.addEventListener("click", () => {
+      // limpiar todos los inputs y salidas
+      const ids = ["Ax","Ay","Az","Bx","By","Bz","Cx","Cy","Cz","Dx","Dy","Dz"];
+      ids.forEach(id => document.getElementById(id).value = "");
+      document.getElementById("vecA").textContent = "a = [...]";
+      document.getElementById("vecB").textContent = "b = [...]";
+      document.getElementById("vecC").textContent = "c = [...]";
+      document.getElementById("areaAB").textContent = "|a × b| = ...";
+      document.getElementById("areaAC").textContent = "|a × c| = ...";
+      document.getElementById("areaBC").textContent = "|b × c| = ...";
+      document.getElementById("areaTotal").textContent = "...";
+      document.getElementById("volOut").textContent = "Volumen = ...";
+      consoleOut.textContent = "No hay salida aún.";
+      errorBox.style.display = "none";
+    });
+  </script>
+</body>
+</html>
